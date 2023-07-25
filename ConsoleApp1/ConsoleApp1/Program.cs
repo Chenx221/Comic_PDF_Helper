@@ -78,9 +78,16 @@ namespace ConsoleApp1
                 // 打开文档
                 pdfDocument.Open();
 
+                // 进度条相关变量
+                int totalImageCount = imageFiles.Length;
+                int currentImageIndex = 0;
+
                 // 逐个添加图像到PDF文档
                 foreach (string imageFile in imageFiles)
                 {
+                    // 更新进度条
+                    UpdateProgressBar(currentImageIndex, totalImageCount);
+
                     // 读取图像文件
                     iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(imageFile);
 
@@ -102,6 +109,8 @@ namespace ConsoleApp1
 
                     // 将图像添加到页面
                     pdfDocument.Add(image);
+
+                    currentImageIndex++;
                 }
 
                 // 关闭文档
@@ -109,6 +118,7 @@ namespace ConsoleApp1
                 fileStream.Close();
                 pdfWriter.Close();
 
+                Console.WriteLine(); // 换行，确保进度条后面不会被覆盖
                 Console.WriteLine($"漫画文件夹 {comicFolder} 转换完成。");
             }
 
@@ -154,6 +164,20 @@ namespace ConsoleApp1
                 // If the numbers are the same up to this point, compare the remaining non-numeric parts
                 return x.CompareTo(y);
             }
+        }
+
+        // 更新进度条
+        private static void UpdateProgressBar(int current, int total)
+        {
+            int progressBarWidth = 50;
+            int progress = (int)Math.Round((double)current / total * progressBarWidth);
+
+            // 检查是否是最后一次更新
+            if (current == total - 1)
+                progress = progressBarWidth; // 将进度设置为进度条的最大宽度
+
+            string progressBar = "[" + new string('=', progress) + new string(' ', progressBarWidth - progress) + "]";
+            Console.Write($"\r{progressBar} {current + 1}/{total}");
         }
 
     }
