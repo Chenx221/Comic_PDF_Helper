@@ -14,7 +14,8 @@ namespace ConsoleApp1
         static void Main(string[] args)
         {
             // 设置控制台的输出编码为UTF-8
-            Console.OutputEncoding = Encoding.UTF8;
+            //Console.OutputEncoding = Encoding.UTF8;
+            Console.OutputEncoding = Encoding.GetEncoding(936);
 
             // 获取上级文件夹路径
             Console.Write("请输入漫画所在的根路径：");
@@ -46,6 +47,9 @@ namespace ConsoleApp1
             // 循环处理每个漫画文件夹
             foreach (string comicFolder in comicFolders)
             {
+                // 输出开始处理提示信息
+                Console.WriteLine($"开始处理漫画文件夹 {comicFolder}...");
+
                 // 确保漫画文件夹中包含图像文件
                 string[] imageFiles = Directory.GetFiles(comicFolder, "*.*", SearchOption.AllDirectories)
                                              .Where(file => file.ToLower().EndsWith(".jpg") || file.ToLower().EndsWith(".png"))
@@ -137,12 +141,16 @@ namespace ConsoleApp1
         {
             public int Compare(string x, string y)
             {
-                // Define the regex pattern to match numbers in the strings
+                // Get the file names from the full file paths
+                string fileNameX = Path.GetFileName(x);
+                string fileNameY = Path.GetFileName(y);
+
+                // Define the regex pattern to match numbers in the file names
                 string pattern = @"(\d+)";
 
-                // Get all the matches of numbers in the strings
-                MatchCollection matchesX = Regex.Matches(x, pattern);
-                MatchCollection matchesY = Regex.Matches(y, pattern);
+                // Get all the matches of numbers in the file names
+                MatchCollection matchesX = Regex.Matches(fileNameX, pattern);
+                MatchCollection matchesY = Regex.Matches(fileNameY, pattern);
 
                 // Compare the matches one by one
                 int matchCount = Math.Min(matchesX.Count, matchesY.Count);
@@ -156,13 +164,13 @@ namespace ConsoleApp1
                         return numComparison;
 
                     // Compare the non-numeric parts between the matched numbers
-                    int nonNumericComparison = x.IndexOf(matchesX[i].Value) - y.IndexOf(matchesY[i].Value);
+                    int nonNumericComparison = fileNameX.IndexOf(matchesX[i].Value) - fileNameY.IndexOf(matchesY[i].Value);
                     if (nonNumericComparison != 0)
                         return nonNumericComparison;
                 }
 
                 // If the numbers are the same up to this point, compare the remaining non-numeric parts
-                return x.CompareTo(y);
+                return fileNameX.CompareTo(fileNameY);
             }
         }
 
