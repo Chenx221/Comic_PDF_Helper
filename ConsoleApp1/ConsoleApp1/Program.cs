@@ -3,6 +3,9 @@ using System.IO;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ConsoleApp1
 {
@@ -10,6 +13,9 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
+            // 设置控制台的输出编码为UTF-8
+            Console.OutputEncoding = Encoding.UTF8;
+
             // 获取上级文件夹路径
             Console.Write("请输入漫画所在的根路径：");
             string parentFolder = Console.ReadLine();
@@ -50,6 +56,9 @@ namespace ConsoleApp1
                     Console.WriteLine($"在漫画文件夹 {comicFolder} 中未找到任何图像文件 (.jpg or .png)。");
                     continue; // 继续处理下一个漫画文件夹
                 }
+
+                // Sort the imageFiles using the NaturalSortComparer
+                Array.Sort(imageFiles, new NaturalSortComparer());
 
                 // 生成 PDF 文件名为漫画文件夹的名称
                 string pdfFileName = Path.Combine(outputFolder, $"{Path.GetFileName(comicFolder)}.pdf");
@@ -112,5 +121,41 @@ namespace ConsoleApp1
             Console.WriteLine("按任意键退出...");
             Console.ReadKey();
         }
+
+        // Custom Natural Sort Comparer
+        public class NaturalSortComparer : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                // Define the regex pattern to match numbers in the strings
+                string pattern = @"(\d+)";
+
+                // Get all the matches of numbers in the strings
+                MatchCollection matchesX = Regex.Matches(x, pattern);
+                MatchCollection matchesY = Regex.Matches(y, pattern);
+
+                // Compare the matches one by one
+                int matchCount = Math.Min(matchesX.Count, matchesY.Count);
+                for (int i = 0; i < matchCount; i++)
+                {
+                    int numX = int.Parse(matchesX[i].Value);
+                    int numY = int.Parse(matchesY[i].Value);
+
+                    int numComparison = numX.CompareTo(numY);
+                    if (numComparison != 0)
+                        return numComparison;
+
+                    // Compare the non-numeric parts between the matched numbers
+                    int nonNumericComparison = x.IndexOf(matchesX[i].Value) - y.IndexOf(matchesY[i].Value);
+                    if (nonNumericComparison != 0)
+                        return nonNumericComparison;
+                }
+
+                // If the numbers are the same up to this point, compare the remaining non-numeric parts
+                return x.CompareTo(y);
+            }
+        }
+
     }
 }
+
