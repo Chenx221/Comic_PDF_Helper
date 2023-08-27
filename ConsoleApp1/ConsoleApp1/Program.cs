@@ -95,8 +95,17 @@ namespace ConsoleApp1
                     UpdateProgressBar(currentImageIndex, totalImageCount);
 
                     Image image = new(ImageDataFactory.Create(imageFile));
-                    image.SetAutoScale(true);
-                    image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    //image.SetAutoScale(true);
+                    //image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    float widthRatio = pdfDocument.GetDefaultPageSize().GetWidth() / image.GetImageWidth();
+                    float heightRatio = pdfDocument.GetDefaultPageSize().GetHeight() / image.GetImageHeight();
+                    float ratio = Math.Min(widthRatio, heightRatio);
+                    image.Scale(ratio,ratio);
+
+                    // 将图像添加到页面中间
+                    float x = (pdfDocument.GetDefaultPageSize().GetWidth() - image.GetImageScaledWidth()) / 2;
+                    float y = (pdfDocument.GetDefaultPageSize().GetHeight() - image.GetImageScaledHeight()) / 2;
+                    image.SetFixedPosition(x, y);
                     doc.Add(image);
 
                     // 在除最后一张图像外的图像后添加空白页面
