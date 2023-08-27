@@ -8,8 +8,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
-using iText.Kernel.Geom;
-using iText.Layout.Properties;
 
 namespace ConsoleApp1
 {
@@ -95,8 +93,8 @@ namespace ConsoleApp1
                     UpdateProgressBar(currentImageIndex, totalImageCount);
 
                     Image image = new(ImageDataFactory.Create(imageFile));
-                    //image.SetAutoScale(true);
-                    //image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+
+                    // 合适的缩放
                     float widthRatio = pdfDocument.GetDefaultPageSize().GetWidth() / image.GetImageWidth();
                     float heightRatio = pdfDocument.GetDefaultPageSize().GetHeight() / image.GetImageHeight();
                     float ratio = Math.Min(widthRatio, heightRatio);
@@ -108,6 +106,9 @@ namespace ConsoleApp1
                     image.SetFixedPosition(x, y);
                     doc.Add(image);
 
+                    GC.Collect();
+                    //image = null;
+
                     // 在除最后一张图像外的图像后添加空白页面
                     if (currentImageIndex < totalImageCount - 1)
                     {
@@ -118,6 +119,7 @@ namespace ConsoleApp1
                 }
 
                 // 关闭文档
+                //doc.Close(); //这里会导致内存无法自动回收
                 pdfDocument.Close();
                 pdfWriter.Close();
 
