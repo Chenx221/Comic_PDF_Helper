@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.IO.Image;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
+using iText.Kernel.Geom;
+using iText.Layout.Properties;
 
 namespace ConsoleApp1
 {
@@ -15,6 +19,7 @@ namespace ConsoleApp1
         {
             // 设置控制台的输出编码为UTF-8
             //Console.OutputEncoding = Encoding.UTF8;
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             Console.OutputEncoding = Encoding.GetEncoding(936);
 
             // 获取上级文件夹路径
@@ -65,7 +70,7 @@ namespace ConsoleApp1
                 Array.Sort(imageFiles, new NaturalSortComparer());
 
                 // 生成 PDF 文件名为漫画文件夹的名称
-                string pdfFileName = Path.Combine(outputFolder, $"{Path.GetFileName(comicFolder)}.pdf");
+                string pdfFileName = System.IO.Path.Combine(outputFolder, $"{System.IO.Path.GetFileName(comicFolder)}.pdf");
 
                 // 检查PDF文件是否已经存在，若存在则跳过当前漫画文件夹的处理
                 if (File.Exists(pdfFileName))
@@ -74,13 +79,10 @@ namespace ConsoleApp1
                     continue;
                 }
 
-                // 创建一个新的PDF文档
-                Document pdfDocument = new Document();
-                FileStream fileStream = File.Create(pdfFileName);
-                PdfWriter pdfWriter = PdfWriter.GetInstance(pdfDocument, fileStream);
+                PdfWriter pdfWriter = new PdfWriter(pdfFileName);
+                PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+                Document doc = new Document(pdfDocument);
 
-                // 打开文档
-                pdfDocument.Open();
 
                 // 进度条相关变量
                 int totalImageCount = imageFiles.Length;
@@ -92,34 +94,22 @@ namespace ConsoleApp1
                     // 更新进度条
                     UpdateProgressBar(currentImageIndex, totalImageCount);
 
-                    // 读取图像文件
-                    iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(imageFile);
+                    Image image = new(ImageDataFactory.Create(imageFile));
+                    image.SetAutoScale(true);
+                    image.SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    doc.Add(image);
 
-                    // 计算图像缩放比例，使其适合于PDF页面
-                    float widthRatio = pdfDocument.PageSize.Width / image.Width;
-                    float heightRatio = pdfDocument.PageSize.Height / image.Height;
-                    float ratio = Math.Min(widthRatio, heightRatio);
-
-                    // 设置图像缩放比例
-                    image.ScalePercent(ratio * 100);
-
-                    // 新建一个页面
-                    pdfDocument.NewPage();
-
-                    // 将图像添加到页面中间
-                    float x = (pdfDocument.PageSize.Width - image.ScaledWidth) / 2;
-                    float y = (pdfDocument.PageSize.Height - image.ScaledHeight) / 2;
-                    image.SetAbsolutePosition(x, y);
-
-                    // 将图像添加到页面
-                    pdfDocument.Add(image);
+                    // 在除最后一张图像外的图像后添加空白页面
+                    if (currentImageIndex < totalImageCount - 1)
+                    {
+                        doc.Add(new AreaBreak());
+                    }
 
                     currentImageIndex++;
                 }
 
                 // 关闭文档
                 pdfDocument.Close();
-                fileStream.Close();
                 pdfWriter.Close();
 
                 Console.WriteLine(); // 换行，确保进度条后面不会被覆盖
@@ -142,8 +132,8 @@ namespace ConsoleApp1
             public int Compare(string x, string y)
             {
                 // Get the file names from the full file paths
-                string fileNameX = Path.GetFileName(x);
-                string fileNameY = Path.GetFileName(y);
+                string fileNameX = System.IO.Path.GetFileName(x);
+                string fileNameY = System.IO.Path.GetFileName(y);
 
                 // Define the regex pattern to match numbers in the file names
                 string pattern = @"(\d+)";
