@@ -8,6 +8,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Numerics;
 
 namespace ConsoleApp1
 {
@@ -157,8 +158,8 @@ namespace ConsoleApp1
                 int matchCount = Math.Min(matchesX.Count, matchesY.Count);
                 for (int i = 0; i < matchCount; i++)
                 {
-                    int numX = int.Parse(matchesX[i].Value);
-                    int numY = int.Parse(matchesY[i].Value);
+                    BigInteger numX = BigInteger.Parse(matchesX[i].Value);
+                    BigInteger numY = BigInteger.Parse(matchesY[i].Value);
 
                     int numComparison = numX.CompareTo(numY);
                     if (numComparison != 0)

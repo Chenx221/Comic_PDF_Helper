@@ -31,8 +31,8 @@
     <Description>批量转换图像为PDF的小工具</Description>
     <Product>ConsoleApp1</Product>
     <Copyright>Copyright © Chenx221 2023</Copyright>
-    <AssemblyVersion>1.0.0.2</AssemblyVersion>
-    <FileVersion>1.0.0.2</FileVersion>
+    <AssemblyVersion>1.0.0.3</AssemblyVersion>
+    <FileVersion>1.0.0.3</FileVersion>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <StartupObject>ConsoleApp1.Program</StartupObject>
     <PlatformTarget>AnyCPU</PlatformTarget>
