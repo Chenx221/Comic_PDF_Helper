@@ -29,7 +29,7 @@
     <ManifestKeyFile>ConsoleApp1_TemporaryKey.pfx</ManifestKeyFile>
     <AssemblyTitle>Comic PDF Helper</AssemblyTitle>
     <Description>批量转换图像为PDF的小工具</Description>
-    <Product>ConsoleApp1</Product>
+    <Product>Comic2PDF</Product>
     <Copyright>Copyright © Chenx221 2023</Copyright>
     <AssemblyVersion>1.0.0.3</AssemblyVersion>
     <FileVersion>1.0.0.3</FileVersion>
@@ -50,10 +50,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
-    <PackageReference Include="itext7" Version="8.0.1" />
-    <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.1" />
-    <PackageReference Include="itext7.bouncy-castle-fips-adapter" Version="8.0.1" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.0" />
+    <PackageReference Include="itext7" Version="8.0.3" />
+    <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />
+    <PackageReference Include="itext7.bouncy-castle-fips-adapter" Version="8.0.3" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
