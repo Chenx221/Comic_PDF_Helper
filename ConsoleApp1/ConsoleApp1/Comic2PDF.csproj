@@ -36,6 +36,7 @@
     <StartupObject>ConsoleApp1.Program</StartupObject>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UserSecretsId>d4199a44-e71d-4ff9-9113-8fa705c2e9f1</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8.1">
@@ -50,10 +51,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.0" />
-    <PackageReference Include="itext7" Version="8.0.3" />
-    <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />
-    <PackageReference Include="itext7.bouncy-castle-fips-adapter" Version="8.0.3" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="itext7" Version="8.0.4" />
+    <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.4" />
+    <PackageReference Include="itext7.bouncy-castle-fips-adapter" Version="8.0.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 </Project>
