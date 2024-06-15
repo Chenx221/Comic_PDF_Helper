@@ -1,14 +1,11 @@
 ﻿using System;
 using System.IO;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.IO.Image;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Numerics;
+using System.IO.Compression;
 
 namespace ConsoleApp1
 {
@@ -17,7 +14,6 @@ namespace ConsoleApp1
         static void Main(string[] args)
         {
             // 设置控制台的输出编码为UTF-8
-            //Console.OutputEncoding = Encoding.UTF8;
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             Console.OutputEncoding = Encoding.GetEncoding(936);
 
@@ -33,20 +29,23 @@ namespace ConsoleApp1
                 return;
             }
 
-            // 获取保存 PDF 的根文件夹路径
-            Console.Write("请输入保存PDF位置：");
+            // 获取保存 CBZ 的根文件夹路径
+            Console.Write("请输入保存CBZ位置：");
             string outputFolder = Console.ReadLine();
 
-            // 确保PDF文件夹存在
+            // 确保 CBZ 文件夹存在
             if (!Directory.Exists(outputFolder))
             {
-                Console.WriteLine("PDF文件夹不存在。");
+                Console.WriteLine("CBZ 文件夹不存在。");
                 PauseBeforeExit();
                 return;
             }
 
             // 获取所有漫画文件夹
             string[] comicFolders = Directory.GetDirectories(parentFolder);
+
+            // 设置初始日期
+            DateTime currentDate = new DateTime(2020, 1, 1, 0, 0, 0);
 
             // 循环处理每个漫画文件夹
             foreach (string comicFolder in comicFolders)
@@ -68,69 +67,98 @@ namespace ConsoleApp1
                 // Sort the imageFiles using the NaturalSortComparer
                 Array.Sort(imageFiles, new NaturalSortComparer());
 
-                // 生成 PDF 文件名为漫画文件夹的名称
-                string pdfFileName = System.IO.Path.Combine(outputFolder, $"{System.IO.Path.GetFileName(comicFolder)}.pdf");
+                // 生成 CBZ 文件名为漫画文件夹的名称
+                string cbzFileName = Path.Combine(outputFolder, $"{Path.GetFileName(comicFolder)}.cbz");
 
-                // 检查PDF文件是否已经存在，若存在则跳过当前漫画文件夹的处理
-                if (File.Exists(pdfFileName))
+                // 检查 CBZ 文件是否已经存在，若存在则跳过当前漫画文件夹的处理
+                if (File.Exists(cbzFileName))
                 {
-                    Console.WriteLine($"PDF文件 {pdfFileName} 已存在，跳过。");
+                    Console.WriteLine($"CBZ 文件 {cbzFileName} 已存在，跳过。");
                     continue;
                 }
 
-                PdfWriter pdfWriter = new PdfWriter(pdfFileName);
-                PdfDocument pdfDocument = new PdfDocument(pdfWriter);
-                Document doc = new Document(pdfDocument);
+                // 临时存储重命名后的文件路径
+                string tempFolder = Path.Combine(comicFolder, "temp");
+                Directory.CreateDirectory(tempFolder);
 
-
-                // 进度条相关变量
-                int totalImageCount = imageFiles.Length;
-                int currentImageIndex = 0;
-
-                // 逐个添加图像到PDF文档
-                foreach (string imageFile in imageFiles)
+                // 重新编号并复制图像文件到临时文件夹
+                for (int i = 0; i < imageFiles.Length; i++)
                 {
-                    // 更新进度条
-                    UpdateProgressBar(currentImageIndex, totalImageCount);
-
-                    Image image = new(ImageDataFactory.Create(imageFile));
-
-                    // 合适的缩放
-                    float widthRatio = pdfDocument.GetDefaultPageSize().GetWidth() / image.GetImageWidth();
-                    float heightRatio = pdfDocument.GetDefaultPageSize().GetHeight() / image.GetImageHeight();
-                    float ratio = Math.Min(widthRatio, heightRatio);
-                    image.Scale(ratio,ratio);
-
-                    // 将图像添加到页面中间
-                    float x = (pdfDocument.GetDefaultPageSize().GetWidth() - image.GetImageScaledWidth()) / 2;
-                    float y = (pdfDocument.GetDefaultPageSize().GetHeight() - image.GetImageScaledHeight()) / 2;
-                    image.SetFixedPosition(x, y);
-                    doc.Add(image);
-
-                    GC.Collect();
-                    //image = null;
-
-                    // 在除最后一张图像外的图像后添加空白页面
-                    if (currentImageIndex < totalImageCount - 1)
-                    {
-                        doc.Add(new AreaBreak());
-                    }
-
-                    currentImageIndex++;
+                    string newFileName = $"{(i + 1).ToString("D4")}{Path.GetExtension(imageFiles[i])}";
+                    string newFilePath = Path.Combine(tempFolder, newFileName);
+                    File.Copy(imageFiles[i], newFilePath);
                 }
 
-                // 关闭文档
-                //doc.Close(); //这里会导致内存无法自动回收
-                pdfDocument.Close();
-                pdfWriter.Close();
+                // 获取重新编号后的图像文件
+                string[] renamedImageFiles = Directory.GetFiles(tempFolder);
 
-                Console.WriteLine(); // 换行，确保进度条后面不会被覆盖
+                // 创建 CBZ 文件
+                using (FileStream zipToOpen = new FileStream(cbzFileName, FileMode.Create))
+                {
+                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Create))
+                    {
+                        // 添加图像文件到 CBZ 文件
+                        foreach (string imageFile in renamedImageFiles)
+                        {
+                            archive.CreateEntryFromFile(imageFile, Path.GetFileName(imageFile));
+                        }
+
+                        // 创建 ComicInfo.xml 并添加到 CBZ 文件
+                        string comicInfoXmlContent = GenerateComicInfoXml(comicFolder);
+                        // init needed
+                        //string comicInfoXmlContent = GenerateComicInfoXml2(comicFolder, currentDate);
+                        ZipArchiveEntry comicInfoEntry = archive.CreateEntry("ComicInfo.xml");
+                        using (StreamWriter writer = new StreamWriter(comicInfoEntry.Open()))
+                        {
+                            writer.Write(comicInfoXmlContent);
+                        }
+                    }
+                }
+
+                // 删除临时文件夹
+                Directory.Delete(tempFolder, true);
+
+                // 增加日期
+                currentDate = currentDate.AddHours(7);
+
                 Console.WriteLine($"漫画文件夹 {comicFolder} 转换完成。");
             }
 
             PauseBeforeExit();
         }
 
+        // 生成 ComicInfo.xml 内容
+        private static string GenerateComicInfoXml(string comicFolder)
+        {
+            string title = Path.GetFileName(comicFolder);
+            int year = DateTime.Now.Year;
+            int month = DateTime.Now.Month;
+            int day = DateTime.Now.Day;
+
+            return $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ComicInfo>
+    <Title>{title}</Title>
+    <Year>{year}</Year>
+    <Month>{month}</Month>
+    <Day>{day}</Day>
+</ComicInfo>";
+        }
+        // 生成 ComicInfo.xml 内容
+        private static string GenerateComicInfoXml2(string comicFolder, DateTime date)
+        {
+            string title = Path.GetFileName(comicFolder);
+            int year = date.Year;
+            int month = date.Month;
+            int day = date.Day;
+
+            return $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ComicInfo>
+    <Title>{title}</Title>
+    <Year>{year}</Year>
+    <Month>{month}</Month>
+    <Day>{day}</Day>
+</ComicInfo>";
+        }
         // 暂停程序，等待用户输入任意键后退出
         private static void PauseBeforeExit()
         {
@@ -174,20 +202,6 @@ namespace ConsoleApp1
                 // If the numbers are the same up to this point, compare the remaining non-numeric parts
                 return fileNameX.CompareTo(fileNameY);
             }
-        }
-
-        // 更新进度条
-        private static void UpdateProgressBar(int current, int total)
-        {
-            int progressBarWidth = 50;
-            int progress = (int)Math.Round((double)current / total * progressBarWidth);
-
-            // 检查是否是最后一次更新
-            if (current == total - 1)
-                progress = progressBarWidth; // 将进度设置为进度条的最大宽度
-
-            string progressBar = "[" + new string('=', progress) + new string(' ', progressBarWidth - progress) + "]";
-            Console.Write($"\r{progressBar} {current + 1}/{total}");
         }
 
     }
